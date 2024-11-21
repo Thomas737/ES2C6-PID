@@ -88,7 +88,7 @@ void loop() {
     float num1 = (R1 + R2) * Vin * R3;            //numerator of Rg equation
     float denom1 = Vout1 * (R1 + R2) + Vin * R2;  //denominator of Rg equation
     float Rg1 = (num1 / denom1) - R3;             //calculating strain gauge resistance
-    float dR1 = abs(Rg_init - abs(Rg1));          //calculating the change in strain resistance (should probably not be absolute that may break something)
+    float dR1 = Rg_init - Rg1;          //calculating the change in strain resistance (should probably not be absolute that may break something)
     rolling_array[n_rolling % 10] = (dR1 / (Rg_init * K));
     float strain1=0;
     for (int j = 0; j < 10; j++) {
@@ -101,7 +101,7 @@ void loop() {
     //PID controller
     //
 
-    target = 1024 - constrain(strain1 * 4000000, 100, 950);  //sets a target position dependent on strain, within safe bounds for actuator
+    target = 800 + constrain(strain1 * 1600000, -700, 150);  //sets a target position dependent on strain, within safe bounds for actuator
 
     // if (millis()%12000<6000)
     // {target=100;}
