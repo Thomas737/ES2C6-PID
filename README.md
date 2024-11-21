@@ -1,6 +1,15 @@
 # ES2C6 PID
  
-### Discussion of Global Variables
+### Global Variables
+- Something
+- Something Else
+
+```cpp
+void loop() {
+
+}
+```
+
 ### Setup Function
 ### Loop Function
 ##### Analogue Readings
