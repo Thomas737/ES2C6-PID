@@ -8,6 +8,7 @@
 
 int began = 0;
 
+float maxThomas=0;
 
 float kd = 0;
 //PID controller values for tuning
@@ -63,7 +64,7 @@ void loop() {
   //
 
   // calibrate strain gauge (find unstressed voltage, and subtract from subsequent measurements)
-  if (analogRead(A2) < 820 & began == 0) {
+  if (analogRead(A2) < 600 & began == 0) {
     analogWrite(pwm_a, 255);
     digitalWrite(dir_a, HIGH);
   } else {
@@ -103,22 +104,28 @@ void loop() {
     float denom2 = Vout2 * (R1 + R2) + Vin * R2;  //denominator of Rg equation
     float Rg2 = (num2 / denom2) - R3;             //calculating strain gauge resistance
     float dR2 = Rg_init - Rg2;
-    rolling_array1[n_rolling % 10] = (dR1 / (Rg_init * K));
-    rolling_array2[n_rolling % 10] = (dR2 / (Rg_init * K));
-    float strain1 = 0;
-    float strain2 = 0;
-    for (int j = 0; j < 10; j++) {
-      strain1 += rolling_array1[j];  // using the strain resistance and dR to calculate the strain (K is gauge factor)
-      strain2 += rolling_array2[j];  // using the strain resistance and dR to calculate the strain (K is gauge factor)
-    }
-    strain1 /= 10;
-    strain2 /= 10;
+    // rolling_array1[n_rolling % 10] = (dR1 / (Rg_init * K));
+    // rolling_array2[n_rolling % 10] = (dR2 / (Rg_init * K));
+    // float strain1 = 0;
+    // float strain2 = 0;
+    // for (int j = 0; j < 10; j++) {
+    //   strain1 += rolling_array1[j];  // using the strain resistance and dR to calculate the strain (K is gauge factor)
+    //   strain2 += rolling_array2[j];  // using the strain resistance and dR to calculate the strain (K is gauge factor)
+    // }
+    // strain1 /= 10;
+    // strain2 /= 10;
+ float strain1 = (dR1 / (Rg_init * K));
+  float strain2 = (dR2 / (Rg_init * K));
+
 
     //
     //PID controller
     //
 
-    target = 800 + constrain((strain1 - strain2) / 2 * 1800000, -700, 150);  //sets a target position dependent on strain, within safe bounds for actuator
+    target = 530 + constrain((strain1 - strain2) / 2 * 1750000, -450, 500);  //sets a target position dependent on strain, within safe bounds for actuator
+
+if (abs((strain1 - strain2) * 1750000)>maxThomas)
+{maxThomas=abs((strain1 - strain2) * 1750000);}
 
     // if (millis()%12000<6000)
     // {target=100;}
@@ -155,18 +162,20 @@ void loop() {
     Serial.print(" , ");
     Serial.print(1000);  // To freeze the upper limit
     Serial.print(" , ");
-    Serial.print(800 + constrain(strain1 * 1600000, -700, 150));
+    Serial.print(530 + constrain(strain1 * 1750000, -450, 500));
     Serial.print(" , ");
     Serial.print(analogRead(A2));
     Serial.print(" , ");
-    Serial.print(800 - constrain(strain2 * 1600000, -700, 600));
+    Serial.print(530 - constrain(strain2 * 1750000, -450, 500));
     Serial.print(" , ");
     Serial.print(target);
+    Serial.print(" , ");
+    Serial.print(maxThomas);
     Serial.print(" , ");
     // Serial.print(millis());
     // Serial.print(" , ");
     Serial.println(output);
   }
   n_rolling += 1;
-  delay(10);  //fiddle with tihs to see how responsive it can get (quite!!!!!!!!)
+  delay(20);  //fiddle with tihs to see how responsive it can get (quite!!!!!!!!)
 }
