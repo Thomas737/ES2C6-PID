@@ -8,20 +8,20 @@
 
 int began = 0;
 
-float maxThomas=0;
+float max_strain_error=0;
 
-float kd = 0;
+float Kd = 0;
 //PID controller values for tuning
-float kp = 4;
-float ki = 0.12;
+float Kp = 4;
+float Ki = 0.12;
 
-float time;  //other values used by PID controller
+// PID Values
+float time;
 float lasttime = 0;
-float error = 0;
 float lasterror = 0;
 float integral = 0;
-float derivative = 0;
-int output = 0;
+
+//
 int target = 950;
 
 int pwm_a = 3;  //PWM control for motor (speed, 0-255)
@@ -104,33 +104,33 @@ void loop() {
     float denom2 = Vout2 * (R1 + R2) + Vin * R2;  //denominator of Rg equation
     float Rg2 = (num2 / denom2) - R3;             //calculating strain gauge resistance
     float dR2 = Rg_init - Rg2;
+
+    // ------ Depricated Rolling Average ------ //
+
     // rolling_array1[n_rolling % 10] = (dR1 / (Rg_init * K));
     // rolling_array2[n_rolling % 10] = (dR2 / (Rg_init * K));
     // float strain1 = 0;
     // float strain2 = 0;
     // for (int j = 0; j < 10; j++) {
-    //   strain1 += rolling_array1[j];  // using the strain resistance and dR to calculate the strain (K is gauge factor)
-    //   strain2 += rolling_array2[j];  // using the strain resistance and dR to calculate the strain (K is gauge factor)
+    //   strain1 += rolling_array1[j];
+    //   strain2 += rolling_array2[j];
     // }
     // strain1 /= 10;
     // strain2 /= 10;
- float strain1 = (dR1 / (Rg_init * K));
-  float strain2 = (dR2 / (Rg_init * K));
+
+    // ----------------- END ------------------ //
+
+    float strain1 = (dR1 / (Rg_init * K));
+    float strain2 = (dR2 / (Rg_init * K));
 
 
-    //
-    //PID controller
-    //
+    // ------------ PID Controller ------------ //
 
     target = 530 + constrain((strain1 - strain2) / 2 * 1750000, -450, 500);  //sets a target position dependent on strain, within safe bounds for actuator
 
-if (abs((strain1 - strain2) * 1750000)>maxThomas)
-{maxThomas=abs((strain1 - strain2) * 1750000);}
-
-    // if (millis()%12000<6000)
-    // {target=100;}
-    // else{target=300;}
-
+    if (abs((strain1 - strain2) * 1750000)>max_strain_error) {
+      max_strain_error=abs((strain1 - strain2) * 1750000);
+    }
 
 
     time = millis();                  //time in ms since program begun
@@ -139,7 +139,8 @@ if (abs((strain1 - strain2) * 1750000)>maxThomas)
     derivative = (error - lasterror) / ((time - lasttime) / 1000);       //estimates derivative of error using d(error)/d(time)
     integral += ((error + lasterror) / 2) * ((time - lasttime) / 1000);  //estimates integral of error between last measurement time and current time
     integral = constrain(integral, -255, 255);                           //prevents integral value from becoming massive if error persists for a long time
-    output = kp * error + ki * integral + kd * derivative;               //uses K and error values to create control signal
+    int output = Kp * error + Ki * integral + Kd * derivative;               //uses K and error values to create control signal
+    lasterror = error;
 
     if (output < 0) {  //sets direction to move dependent on control signal
       digitalWrite(dir_a, LOW);
@@ -155,9 +156,10 @@ if (abs((strain1 - strain2) * 1750000)>maxThomas)
     }
 
     lasttime = time;  //sets previous values to current ones, as they are no longer needed in this loop
-    lasterror = error;
 
-    // //debug outputs
+
+    // ------------ Debug Outputs ------------ //
+    
     Serial.print(0);  // To freeze the lower limit
     Serial.print(" , ");
     Serial.print(1000);  // To freeze the upper limit
@@ -170,7 +172,7 @@ if (abs((strain1 - strain2) * 1750000)>maxThomas)
     Serial.print(" , ");
     Serial.print(target);
     Serial.print(" , ");
-    Serial.print(maxThomas);
+    Serial.print(max_strain_error);
     Serial.print(" , ");
     // Serial.print(millis());
     // Serial.print(" , ");
@@ -178,4 +180,15 @@ if (abs((strain1 - strain2) * 1750000)>maxThomas)
   }
   n_rolling += 1;
   delay(20);  //fiddle with tihs to see how responsive it can get (quite!!!!!!!!)
+}
+
+int compute_output() {
+  float error = target - analogRead(A2);  //finds current error (difference between target and current positions)
+
+  float derivative = (error - lasterror) / ((time - lasttime) / 1000);       //estimates derivative of error using d(error)/d(time)
+  integral += ((error + lasterror) / 2) * ((time - lasttime) / 1000);  //estimates integral of error between last measurement time and current time
+  integral = constrain(integral, -255, 255);                           //prevents integral value from becoming massive if error persists for a long time
+  lasterror = error;
+
+  return Kp * error + Ki * integral + Kd * derivative;               //uses K and error values to create control signal
 }
