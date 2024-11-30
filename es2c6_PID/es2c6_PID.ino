@@ -40,7 +40,7 @@ float intS2;
 float rolling_array1[] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 float rolling_array2[] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
-int n_rolling = 0;
+//int n_rolling = 0;
 
 void setup() {
   // put your setup code here, to run once:
@@ -178,7 +178,7 @@ void loop() {
     // Serial.print(" , ");
     Serial.println(output);
   }
-  n_rolling += 1;
+//  n_rolling += 1;
   delay(20);  //fiddle with tihs to see how responsive it can get (quite!!!!!!!!)
 }
 
