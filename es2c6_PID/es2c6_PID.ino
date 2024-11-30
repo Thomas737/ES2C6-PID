@@ -37,8 +37,8 @@ float Vin = 5;       //voltage across the wheatstone bridge supplied by arduino 
 float intS1;         //voltage measured from strain gauge (0-5V)
 float intS2;
 
-float rolling_array1[] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-float rolling_array2[] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+//float rolling_array1[] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+//float rolling_array2[] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
 //int n_rolling = 0;
 
